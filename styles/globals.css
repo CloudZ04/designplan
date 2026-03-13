@@ -1,35 +1,12 @@
 :root {
-
-    /* blue-slate */
-    --blue-slate-50: #f0f2f5;
-    --blue-slate-100: #e0e4eb;
-    --blue-slate-200: #c2c9d6;
-    --blue-slate-300: #a3aec2;
-    --blue-slate-400: #8594ad;
-    --blue-slate-500: #667999;
-    --blue-slate-600: #52617a;
-    --blue-slate-700: #48556B;
-    --blue-slate-800: #364256;
-    --blue-slate-900: #242C3D;
-    --blue-slate-950: #12161F;
-  
-    /* twilight-indigo */
-    --twilight-indigo-400: #7a8bb8;
-    --twilight-indigo-600: #475885;
-    --twilight-indigo-700: #303B59;
-  
-    /* space-indigo */
-    --space-indigo-400: #677bcb;
-    --space-indigo-500: #415abe;
-    --space-indigo-700: #182146;
-    --space-indigo-800: #000734;
-  
-    /* prussian-blue */
-    --prussian-blue-400: #334eff;
-    --prussian-blue-500: #0022ff;
-  
+    --font-ui: 'Satoshi', sans-serif;
+    --font-mono: 'Monosten', monospace;
   }
-
+  
+  body {
+    font-family: var(--font-ui);
+  }
+  
   .background-gradient {
     background:
       radial-gradient(
@@ -59,4 +36,45 @@
       linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
+  }
+
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+  }
+
+  .plan-card {
+    display: flex;
+    flex-direction: column;
+    height: 220px;
+  }
+
+  .plan-meta {
+    margin-top: auto;
+  }
+
+  .badge {
+    font-family: var(--font-mono);
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    overflow: hidden;
+    border-radius: 6px;
+    font-size: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  
+  .badge-label {
+    background: #334155;
+    padding: 3px 8px;
+    font-weight: 600;
+  }
+  
+  .badge-value {
+    background: #0f172a;
+    padding: 3px 8px;
+  }
+
+  .button {
+    font-family: var(--font-ui);
   }
