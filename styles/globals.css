@@ -1,0 +1,62 @@
+:root {
+
+    /* blue-slate */
+    --blue-slate-50: #f0f2f5;
+    --blue-slate-100: #e0e4eb;
+    --blue-slate-200: #c2c9d6;
+    --blue-slate-300: #a3aec2;
+    --blue-slate-400: #8594ad;
+    --blue-slate-500: #667999;
+    --blue-slate-600: #52617a;
+    --blue-slate-700: #48556B;
+    --blue-slate-800: #364256;
+    --blue-slate-900: #242C3D;
+    --blue-slate-950: #12161F;
+  
+    /* twilight-indigo */
+    --twilight-indigo-400: #7a8bb8;
+    --twilight-indigo-600: #475885;
+    --twilight-indigo-700: #303B59;
+  
+    /* space-indigo */
+    --space-indigo-400: #677bcb;
+    --space-indigo-500: #415abe;
+    --space-indigo-700: #182146;
+    --space-indigo-800: #000734;
+  
+    /* prussian-blue */
+    --prussian-blue-400: #334eff;
+    --prussian-blue-500: #0022ff;
+  
+  }
+
+  .background-gradient {
+    background:
+      radial-gradient(
+        circle at 20% 25%,
+        rgba(103, 123, 203, 0.12),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 80% 75%,
+        rgba(71, 88, 133, 0.15),
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 50% 100%,
+        rgba(72, 85, 107, 0.18),
+        transparent 50%
+      ),
+      #12161f;
+  }
+
+  .background-gradient::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
