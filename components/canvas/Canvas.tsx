@@ -32,12 +32,14 @@ function nearestSnap(value: number, targets: number[]) {
 }
 
 type ResizeEdge = "e" | "s" | "se"
+type ActiveTool = "select" | "delete"
 
 export default function Canvas({ plan, blocks }: any) {
   const [canvasBlocks, setCanvasBlocks] = useState(blocks || [])
   const [planUpdatedAt, setPlanUpdatedAt] = useState<string | null>(
     plan?.updated_at ?? null
   )
+  const [activeTool, setActiveTool] = useState<ActiveTool>("select")
   const [resizing, setResizing] = useState<{
     blockId: string
     edge: ResizeEdge
@@ -213,6 +215,16 @@ export default function Canvas({ plan, blocks }: any) {
     []
   )
 
+  const handleDeleteBlock = useCallback(
+    async (blockId: string) => {
+      const res = await fetch(`/api/blocks/${blockId}`, { method: "DELETE" })
+      if (!res.ok) return
+      setCanvasBlocks((prev: any[]) => prev.filter((b) => b.id !== blockId))
+      setPlanUpdatedAt(new Date().toISOString())
+    },
+    []
+  )
+
   useEffect(() => {
     if (!resizing) return
 
@@ -264,19 +276,54 @@ export default function Canvas({ plan, blocks }: any) {
       {/* Canvas area */}
       <div className="flex-1 p-6 min-h-screen">
 
-        <div className="flex text-xl font-semibold mb-4 border rounded-lg p-2 px-4 gap-4">
-          <h2 className="flex items-center gap-2 flex-1">
+        <div className="flex items-center text-xl font-semibold mb-4 border rounded-lg p-2 px-4 gap-4">
+          <h2 className="flex items-center gap-2 flex-1 min-w-0 truncate">
             {plan?.title || "Untitled"}
           </h2>
 
-          <span className="badge">
+          {/* Middle: tools */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() =>
+                setActiveTool((t) => (t === "delete" ? "select" : "delete"))
+              }
+              className={`p-2 rounded cursor-pointer transition-colors ${
+                activeTool === "delete"
+                  ? "bg-red-500/20 text-red-400 ring-1 ring-red-500/50 hover:bg-red-500/30"
+                  : "bg-gray-700/50 text-gray-400 hover:text-gray-200 hover:bg-gray-500/50"
+              }`}
+              title={activeTool === "delete" ? "Delete mode (click a block)" : "Delete block"}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </button>
+          </div>
+
+          <span className="badge shrink-0">
             <span className="badge-label">Created</span>
             <span className="badge-value">
               {new Date(plan.created_at).toLocaleDateString("en-GB")}
             </span>
           </span>
 
-          <span className="badge">
+          <span className="badge shrink-0">
             <span className="badge-label">Updated</span>
             <span className="badge-value">
               {new Date(planUpdatedAt ?? plan.updated_at).toLocaleTimeString()}
@@ -344,6 +391,8 @@ export default function Canvas({ plan, blocks }: any) {
               ev.currentTarget?.addEventListener?.("dragend", cleanup)
             }
 
+            const isDeleteMode = activeTool === "delete"
+
             return (
               <div
                 key={block.id}
@@ -352,7 +401,20 @@ export default function Canvas({ plan, blocks }: any) {
                   left: block.position_x,
                   top: block.position_y
                 }}
-                className="block-wrapper"
+                className={`block-wrapper ${isDeleteMode ? "cursor-pointer" : ""}`}
+                onClick={
+                  isDeleteMode
+                    ? (e) => {
+                        const target = e.target as HTMLElement
+                        if (target.closest("button, input, [contenteditable]"))
+                          return
+                        e.stopPropagation()
+                        handleDeleteBlock(block.id)
+                      }
+                    : undefined
+                }
+                role={isDeleteMode ? "button" : undefined}
+                title={isDeleteMode ? "Click to delete block" : undefined}
               >
                 <div
                   style={{ width: bw, height: bh }}
@@ -363,19 +425,20 @@ export default function Canvas({ plan, blocks }: any) {
                       block={block}
                       onUpdate={(data) => updateBlockData(block.id, data)}
                       onDragStart={handleBlockDragStart}
+                      disableDrag={isDeleteMode}
                     />
                   ) : (
                     <div
-                      draggable
+                      draggable={!isDeleteMode}
                       onDragStart={handleBlockDragStart}
                       style={{ width: bw, height: bh }}
-                      className="bg-gray-800 border rounded-lg p-3 text-sm cursor-move select-none"
+                      className={`bg-gray-800 border rounded-lg p-3 text-sm select-none ${isDeleteMode ? "cursor-pointer" : "cursor-move"}`}
                     >
                       {block.type}
                     </div>
                   )}
-                  {/* Resize handles - only when not resizing this block */}
-                  {resizing?.blockId !== block.id && (
+                  {/* Resize handles - only when not resizing and not in delete mode */}
+                  {resizing?.blockId !== block.id && !isDeleteMode && (
                     <>
                       <div
                         role="presentation"

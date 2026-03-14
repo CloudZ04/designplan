@@ -29,12 +29,14 @@ interface ColourBlockProps {
   block: { id: string; width?: number; height?: number; data?: unknown }
   onUpdate: (data: { colors: string[] }) => Promise<void>
   onDragStart: (e: React.DragEvent) => void
+  disableDrag?: boolean
 }
 
 export default function ColourBlock({
   block,
   onUpdate,
-  onDragStart
+  onDragStart,
+  disableDrag = false
 }: ColourBlockProps) {
   const { colors: initialColors } = parseBlockData(block)
   const [colors, setColors] = useState<string[]>(
@@ -79,9 +81,9 @@ export default function ColourBlock({
       }}
     >
       <div
-        draggable
+        draggable={!disableDrag}
         onDragStart={onDragStart}
-        className="flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-600 shrink-0 cursor-move"
+        className={`flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-600 shrink-0 ${disableDrag ? "cursor-pointer" : "cursor-move"}`}
       >
         <span className="text-sm font-medium text-gray-200">
           Colour block
