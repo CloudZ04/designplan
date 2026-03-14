@@ -14,7 +14,7 @@ A visual design planning tool built with Next.js.
 ## Tech Stack
 
 ![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white&style=for-the-badge)
-![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=7DDFFF&style=for-the-badge)
+![React](https://img.shields.io/badge/React-282C34?logo=react&logoColor=7DDFFF&style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white&style=for-the-badge)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?logo=postgresql&logoColor=white&style=for-the-badge)
 ![React Flow](https://img.shields.io/badge/ReactFlow-Canvas-purple?style=for-the-badge)
