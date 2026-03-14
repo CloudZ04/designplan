@@ -8,6 +8,7 @@
   }
   
   .background-gradient {
+    position: relative;
     background:
       radial-gradient(
         circle at 20% 25%,
@@ -77,4 +78,43 @@
 
   .button {
     font-family: var(--font-ui);
+  }
+
+  .canvas-grid {
+    background-image:
+      linear-gradient(rgba(148,163,184,0.18) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148,163,184,0.18) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Block resize handles (Figma-style) */
+  .block-wrapper .resize-handle {
+    position: absolute;
+    z-index: 10;
+    pointer-events: auto;
+  }
+  .block-wrapper .resize-handle:hover {
+    background: rgba(99, 102, 241, 0.35);
+  }
+  .block-wrapper .resize-handle-e {
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: ew-resize;
+  }
+  .block-wrapper .resize-handle-s {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    cursor: ns-resize;
+  }
+  .block-wrapper .resize-handle-se {
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+    border-bottom-right-radius: 8px;
   }
