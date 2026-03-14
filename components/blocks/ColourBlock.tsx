@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 
-const COLOURS_PER_ROW = 4
+const COLOURS_PER_ROW = 3
 const DEFAULT_HEX = "#888888"
 
 function parseBlockData(block: { data?: unknown }) {

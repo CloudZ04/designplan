@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import Sidebar from "@/components/sidebar/Sidebar"
 import ColourBlock from "@/components/blocks/ColourBlock"
+import TypographyBlock from "@/components/blocks/TypographyBlock"
 import "@/styles/globals.css"
 
 const GRID_SIZE = 40
@@ -162,7 +163,7 @@ export default function Canvas({ plan, blocks }: any) {
   }
 
   const updateBlockData = useCallback(
-    async (blockId: string, data: { colors?: string[] }) => {
+    async (blockId: string, data: Record<string, unknown>) => {
       const res = await fetch(`/api/blocks/${blockId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -424,6 +425,15 @@ export default function Canvas({ plan, blocks }: any) {
                     <ColourBlock
                       block={block}
                       onUpdate={(data) => updateBlockData(block.id, data)}
+                      onDragStart={handleBlockDragStart}
+                      disableDrag={isDeleteMode}
+                    />
+                  ) : block.type === "typography" ? (
+                    <TypographyBlock
+                      block={block}
+                      onUpdate={(data) =>
+                        updateBlockData(block.id, data as Record<string, unknown>)
+                      }
                       onDragStart={handleBlockDragStart}
                       disableDrag={isDeleteMode}
                     />
