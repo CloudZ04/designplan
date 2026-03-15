@@ -86,7 +86,7 @@ export default function ColourBlock({
         className={`flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-600 shrink-0 ${disableDrag ? "cursor-pointer" : "cursor-move"}`}
       >
         <span className="text-sm font-medium text-gray-200">
-          Colour block
+          Colour Block
         </span>
         <button
           type="button"
@@ -97,7 +97,7 @@ export default function ColourBlock({
           }}
           className="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 cursor-pointer"
         >
-          + Add colour
+          + Add Colour
         </button>
       </div>
 

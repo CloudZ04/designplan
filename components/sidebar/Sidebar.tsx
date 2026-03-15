@@ -5,7 +5,12 @@ const DEFAULT_HOTSPOT_Y = 20
 
 const BLOCK_DEFAULTS: Record<string, { width: number; height: number }> = {
   colour: { width: 220, height: 140 },
-  typography: { width: 240, height: 300 }
+  typography: { width: 240, height: 300 },
+  techstack: { width: 260, height: 200 },
+  softwarestack: { width: 260, height: 200 },
+  links: { width: 280, height: 220 },
+  deadline: { width: 260, height: 200 },
+  notes: { width: 280, height: 200 }
 }
 
 function getBlockDefaults(type: string) {
@@ -68,6 +73,46 @@ export default function Sidebar() {
         className="border rounded px-3 py-2 w-full bg-gray-900/60 hover:bg-gray-800 cursor-move text-sm"
       >
         Typography block
+      </div>
+
+      <div
+        draggable
+        onDragStart={(e) => handleDragStart(e, "techstack")}
+        className="border rounded px-3 py-2 w-full bg-gray-900/60 hover:bg-gray-800 cursor-move text-sm"
+      >
+        Tech stack block
+      </div>
+
+      <div
+        draggable
+        onDragStart={(e) => handleDragStart(e, "softwarestack")}
+        className="border rounded px-3 py-2 w-full bg-gray-900/60 hover:bg-gray-800 cursor-move text-sm"
+      >
+        Software / OS stack block
+      </div>
+
+      <div
+        draggable
+        onDragStart={(e) => handleDragStart(e, "links")}
+        className="border rounded px-3 py-2 w-full bg-gray-900/60 hover:bg-gray-800 cursor-move text-sm"
+      >
+        URL / Links / CDNs block
+      </div>
+
+      <div
+        draggable
+        onDragStart={(e) => handleDragStart(e, "deadline")}
+        className="border rounded px-3 py-2 w-full bg-gray-900/60 hover:bg-gray-800 cursor-move text-sm"
+      >
+        Deadline block
+      </div>
+
+      <div
+        draggable
+        onDragStart={(e) => handleDragStart(e, "notes")}
+        className="border rounded px-3 py-2 w-full bg-gray-900/60 hover:bg-gray-800 cursor-move text-sm"
+      >
+        Notes block
       </div>
     </div>
   )

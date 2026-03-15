@@ -1,69 +1,69 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { resolveTechIcon } from "@/lib/techIcons"
+import { resolveSoftwareIcon } from "@/lib/softwareIcons"
 
-interface TechItem {
+interface SoftwareItem {
   name: string
 }
 
-interface TechStackData {
-  techs: TechItem[]
+interface SoftwareStackData {
+  items: SoftwareItem[]
 }
 
-function parseBlockData(block: { data?: unknown }): TechStackData {
+function parseBlockData(block: { data?: unknown }): SoftwareStackData {
   const raw = block.data
   const data = typeof raw === "string" ? JSON.parse(raw || "{}") : raw || {}
-  const techs = Array.isArray(data.techs)
-    ? data.techs.map((t: any) => ({ name: String(t?.name ?? "") }))
+  const items = Array.isArray(data.items)
+    ? data.items.map((t: any) => ({ name: String(t?.name ?? "") }))
     : []
-  return { techs }
+  return { items }
 }
 
-interface TechStackBlockProps {
+interface SoftwareStackBlockProps {
   block: { id: string; width?: number; height?: number; data?: unknown }
-  onUpdate: (data: TechStackData) => Promise<void>
+  onUpdate: (data: SoftwareStackData) => Promise<void>
   onDragStart: (e: React.DragEvent) => void
   disableDrag?: boolean
 }
 
-export default function TechStackBlock({
+export default function SoftwareStackBlock({
   block,
   onUpdate,
   onDragStart,
   disableDrag = false
-}: TechStackBlockProps) {
+}: SoftwareStackBlockProps) {
   const initial = parseBlockData(block)
-  const [techs, setTechs] = useState<TechItem[]>(
-    initial.techs.length > 0 ? initial.techs : [{ name: "" }]
+  const [items, setItems] = useState<SoftwareItem[]>(
+    initial.items.length > 0 ? initial.items : [{ name: "" }]
   )
 
   const persist = useCallback(
-    async (next: TechItem[]) => {
-      setTechs(next)
-      await onUpdate({ techs: next })
+    async (next: SoftwareItem[]) => {
+      setItems(next)
+      await onUpdate({ items: next })
     },
     [onUpdate]
   )
 
-  const setTechName = (index: number, name: string) => {
-    const next = [...techs]
+  const setName = (index: number, name: string) => {
+    const next = [...items]
     next[index] = { name }
-    setTechs(next)
+    setItems(next)
   }
 
-  const setTechNameAndPersist = (index: number, name: string) => {
-    const next = [...techs]
+  const setNameAndPersist = (index: number, name: string) => {
+    const next = [...items]
     next[index] = { name }
     persist(next)
   }
 
-  const addTech = () => {
-    persist([...techs, { name: "" }])
+  const addItem = () => {
+    persist([...items, { name: "" }])
   }
 
-  const removeTech = (index: number) => {
-    const next = techs.filter((_, i) => i !== index)
+  const removeItem = (index: number) => {
+    const next = items.filter((_, i) => i !== index)
     persist(next.length ? next : [{ name: "" }])
   }
 
@@ -72,7 +72,7 @@ export default function TechStackBlock({
       className="bg-gray-800/95 border border-gray-600 rounded-lg overflow-hidden select-none flex flex-col"
       style={{
         width: block.width ?? 260,
-        minHeight: block.height ?? 180
+        minHeight: block.height ?? 200
       }}
     >
       <div
@@ -83,7 +83,7 @@ export default function TechStackBlock({
         }`}
       >
         <span className="text-sm font-medium text-gray-200">
-          Tech Stack
+          Software / OS Stack
         </span>
 
         <button
@@ -91,11 +91,11 @@ export default function TechStackBlock({
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation()
-            addTech()
+            addItem()
           }}
           className="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 cursor-pointer"
         >
-          + Add Tech
+          + Add Software
         </button>
       </div>
 
@@ -103,8 +103,8 @@ export default function TechStackBlock({
         className="p-3 flex-1 min-h-0 overflow-y-auto grid gap-3"
         style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
       >
-        {techs.map((t, index) => {
-          const icon = t.name ? resolveTechIcon(t.name) : null
+        {items.map((t, index) => {
+          const icon = t.name ? resolveSoftwareIcon(t.name) : null
           const initials =
             t.name
               .trim()
@@ -129,7 +129,7 @@ export default function TechStackBlock({
                       icon.invertOnDark
                         ? "invert brightness-150"
                         : icon.brightenOnDark
-                        ? "brightness-300"
+                        ? "brightness-150"
                         : ""
                     }`}
                   />
@@ -143,15 +143,15 @@ export default function TechStackBlock({
               <input
                 type="text"
                 value={t.name}
-                onChange={(e) => setTechName(index, e.target.value)}
-                onBlur={(e) => setTechNameAndPersist(index, e.target.value)}
-                placeholder="e.g. React, Next.js"
+                onChange={(e) => setName(index, e.target.value)}
+                onBlur={(e) => setNameAndPersist(index, e.target.value)}
+                placeholder="e.g. Windows, VS Code, Photoshop"
                 className="w-full px-1.5 py-1 text-[11px] rounded bg-gray-900 border border-gray-700 text-gray-200 placeholder:text-gray-500 text-center focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500"
               />
 
               <button
                 type="button"
-                onClick={() => removeTech(index)}
+                onClick={() => removeItem(index)}
                 className="text-[10px] text-gray-400 hover:text-red-400"
               >
                 Remove

@@ -3,12 +3,19 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import Sidebar from "@/components/sidebar/Sidebar"
 import ColourBlock from "@/components/blocks/ColourBlock"
 import TypographyBlock from "@/components/blocks/TypographyBlock"
+import TechStackBlock from "@/components/blocks/TechStackBlock"
+import SoftwareStackBlock from "@/components/blocks/SoftwareStackBlock"
+import LinksBlock from "@/components/blocks/LinksBlock"
+import DeadlineBlock from "@/components/blocks/DeadlineBlock"
+import NotesBlock from "@/components/blocks/NotesBlock"
 import "@/styles/globals.css"
 
 const GRID_SIZE = 40
 const GRID_STEP = GRID_SIZE / 2 // allow snapping at half-grid points
 const SNAP_THRESHOLD = 10 // px
 const MIN_BLOCK_SIZE = 80
+const MIN_ZOOM = 0.4
+const MAX_ZOOM = 2
 
 function snapToGrid(value: number) {
   return Math.round(value / GRID_STEP) * GRID_STEP
@@ -41,6 +48,9 @@ export default function Canvas({ plan, blocks }: any) {
     plan?.updated_at ?? null
   )
   const [activeTool, setActiveTool] = useState<ActiveTool>("select")
+  const [zoom, setZoom] = useState(1)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const [isPanning, setIsPanning] = useState(false)
   const [resizing, setResizing] = useState<{
     blockId: string
     edge: ResizeEdge
@@ -50,6 +60,8 @@ export default function Canvas({ plan, blocks }: any) {
     startHeight: number
   } | null>(null)
   const resizeCurrentRef = useRef({ width: 0, height: 0 })
+  const panStartRef = useRef({ x: 0, y: 0 })
+  const panOriginRef = useRef({ x: 0, y: 0 })
 
   async function handleDrop(e: any) {
     e.preventDefault()
@@ -69,8 +81,12 @@ export default function Canvas({ plan, blocks }: any) {
 
     const rect = e.currentTarget.getBoundingClientRect()
     // Cursor is positioned at the drag image “hotspot”.
-    const rawX = e.clientX - rect.left - hotspotX
-    const rawY = e.clientY - rect.top - hotspotY
+    const visualX = e.clientX - rect.left - hotspotX
+    const visualY = e.clientY - rect.top - hotspotY
+
+    // Convert from screen space into canvas world space (pan + zoom aware).
+    const rawX = (visualX - offset.x) / zoom
+    const rawY = (visualY - offset.y) / zoom
 
     // First pass: grid snap.
     let position_x = snapToGrid(rawX)
@@ -162,8 +178,42 @@ export default function Canvas({ plan, blocks }: any) {
     e.dataTransfer.dropEffect = "copy"
   }
 
+  function handleCanvasMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    // Only start panning when clicking on empty canvas (not on a block).
+    if (e.button !== 0) return
+    const target = e.target as HTMLElement
+    if (target.closest(".block-wrapper")) return
+    e.preventDefault()
+    panStartRef.current = { x: e.clientX, y: e.clientY }
+    panOriginRef.current = { ...offset }
+    setIsPanning(true)
+  }
+
+  function handleCanvasWheel(e: React.WheelEvent<HTMLDivElement>) {
+    // Plain wheel over the canvas zooms instead of scrolling the page.
+    e.preventDefault()
+
+    const delta = -e.deltaY
+    const factor = delta > 0 ? 1.1 : 0.9
+    const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * factor))
+    if (nextZoom === zoom) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const cursorX = e.clientX - rect.left
+    const cursorY = e.clientY - rect.top
+
+    // Keep the point under the cursor stable while zooming.
+    const worldXBefore = (cursorX - offset.x) / zoom
+    const worldYBefore = (cursorY - offset.y) / zoom
+    const nextOffsetX = cursorX - worldXBefore * nextZoom
+    const nextOffsetY = cursorY - worldYBefore * nextZoom
+
+    setZoom(nextZoom)
+    setOffset({ x: nextOffsetX, y: nextOffsetY })
+  }
+
   const updateBlockData = useCallback(
-    async (blockId: string, data: Record<string, unknown>) => {
+    async (blockId: string, data: any) => {
       const res = await fetch(`/api/blocks/${blockId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -266,8 +316,32 @@ export default function Canvas({ plan, blocks }: any) {
     }
   }, [resizing, updateBlockSize])
 
+  useEffect(() => {
+    if (!isPanning) return
+
+    const onMove = (e: MouseEvent) => {
+      const dx = e.clientX - panStartRef.current.x
+      const dy = e.clientY - panStartRef.current.y
+      setOffset({
+        x: panOriginRef.current.x + dx,
+        y: panOriginRef.current.y + dy
+      })
+    }
+
+    const onUp = () => {
+      setIsPanning(false)
+    }
+
+    window.addEventListener("mousemove", onMove)
+    window.addEventListener("mouseup", onUp)
+    return () => {
+      window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("mouseup", onUp)
+    }
+  }, [isPanning])
+
   return (
-    <div className="flex flex-1">
+    <div className="flex flex-1 h-screen overflow-hidden">
 
       {/* Sidebar */}
       {plan && (
@@ -275,7 +349,7 @@ export default function Canvas({ plan, blocks }: any) {
       )}
 
       {/* Canvas area */}
-      <div className="flex-1 p-6 min-h-screen">
+      <div className="flex-1 p-6 overflow-hidden">
 
         <div className="flex items-center text-xl font-semibold mb-4 border rounded-lg p-2 px-4 gap-4">
           <h2 className="flex items-center gap-2 flex-1 min-w-0 truncate">
@@ -294,7 +368,11 @@ export default function Canvas({ plan, blocks }: any) {
                   ? "bg-red-500/20 text-red-400 ring-1 ring-red-500/50 hover:bg-red-500/30"
                   : "bg-gray-700/50 text-gray-400 hover:text-gray-200 hover:bg-gray-500/50"
               }`}
-              title={activeTool === "delete" ? "Delete mode (click a block)" : "Delete block"}
+              title={
+                activeTool === "delete"
+                  ? "Delete mode (click a block)"
+                  : "Delete block"
+              }
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -315,6 +393,44 @@ export default function Canvas({ plan, blocks }: any) {
                 <line x1="14" y1="11" x2="14" y2="17" />
               </svg>
             </button>
+
+            <div className="flex items-center gap-1 ml-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setZoom((z) =>
+                    Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z * 0.9))
+                  )
+                }
+                className="px-2 py-1 text-xs rounded bg-gray-700/60 text-gray-300 hover:bg-gray-600/80 cursor-pointer"
+              >
+                −
+              </button>
+              <span className="text-xs text-gray-400 min-w-[44px] text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setZoom((z) =>
+                    Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z * 1.1))
+                  )
+                }
+                className="px-2 py-1 text-xs rounded bg-gray-700/60 text-gray-300 hover:bg-gray-600/80 cursor-pointer"
+              >
+                +
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setZoom(1)
+                  setOffset({ x: 0, y: 0 })
+                }}
+                className="px-2 py-1 text-xs rounded bg-gray-700/60 text-gray-300 hover:bg-gray-600/80 cursor-pointer"
+              >
+                Reset
+              </button>
+            </div>
           </div>
 
           <span className="badge shrink-0">
@@ -333,11 +449,20 @@ export default function Canvas({ plan, blocks }: any) {
         </div>
 
         <div
-          className="border rounded-lg min-h-[calc(100vh-110px)] relative canvas-grid"
+          className="border rounded-lg min-h-[calc(100vh-110px)] relative canvas-grid overflow-hidden"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
+          onMouseDown={handleCanvasMouseDown}
+          onWheel={handleCanvasWheel}
         >
-
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+              transformOrigin: "0 0"
+            }}
+          >
           {canvasBlocks.map((block: any) => {
             const bw = block.width || 220
             const bh = block.height || 120
@@ -431,9 +556,42 @@ export default function Canvas({ plan, blocks }: any) {
                   ) : block.type === "typography" ? (
                     <TypographyBlock
                       block={block}
-                      onUpdate={(data) =>
-                        updateBlockData(block.id, data as Record<string, unknown>)
-                      }
+                      onUpdate={(data) => updateBlockData(block.id, data)}
+                      onDragStart={handleBlockDragStart}
+                      disableDrag={isDeleteMode}
+                    />
+                  ) : block.type === "techstack" ? (
+                    <TechStackBlock
+                      block={block}
+                      onUpdate={(data) => updateBlockData(block.id, data)}
+                      onDragStart={handleBlockDragStart}
+                      disableDrag={isDeleteMode}
+                    />
+                  ) : block.type === "softwarestack" ? (
+                    <SoftwareStackBlock
+                      block={block}
+                      onUpdate={(data) => updateBlockData(block.id, data)}
+                      onDragStart={handleBlockDragStart}
+                      disableDrag={isDeleteMode}
+                    />
+                  ) : block.type === "links" ? (
+                    <LinksBlock
+                      block={block}
+                      onUpdate={(data) => updateBlockData(block.id, data)}
+                      onDragStart={handleBlockDragStart}
+                      disableDrag={isDeleteMode}
+                    />
+                  ) : block.type === "deadline" ? (
+                    <DeadlineBlock
+                      block={block}
+                      onUpdate={(data) => updateBlockData(block.id, data)}
+                      onDragStart={handleBlockDragStart}
+                      disableDrag={isDeleteMode}
+                    />
+                  ) : block.type === "notes" ? (
+                    <NotesBlock
+                      block={block}
+                      onUpdate={(data) => updateBlockData(block.id, data)}
                       onDragStart={handleBlockDragStart}
                       disableDrag={isDeleteMode}
                     />
@@ -474,7 +632,7 @@ export default function Canvas({ plan, blocks }: any) {
               </div>
             )
           })}
-
+          </div>
         </div>
 
       </div>
